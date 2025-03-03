@@ -7,7 +7,7 @@ import (
 )
 
 type Event struct {
-	ID          int64
+	ID          int64     `json:"id"`
 	Name        string    `json:"name" binding:"required"`
 	Description string    `json:"description" binding:"required"`
 	Location    string    `json:"location" binding:"required"`
@@ -30,8 +30,8 @@ func (e *Event) Save() error {
 		return err
 	}
 
-	_, err = result.LastInsertId()
-	// e.ID = id
+	id, err := result.LastInsertId()
+	e.ID = id
 
 	return err
 }
@@ -99,5 +99,31 @@ func (e Event) Delete() error {
 
 	defer stmt.Close()
 	_, err = stmt.Exec(e.ID)
+	return err
+}
+
+func (e Event) Register(userId int64) error {
+	query := "INSERT INTO registration (eventId, userId) VALUES (?, ?)"
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	defer db.DB.Close()
+
+	_, err = stmt.Exec(e.ID, userId)
+	return err
+}
+
+func (e Event) CancelRegistration(userId int64) error {
+	query := "DELETE FROM registration WHERE eventId = ? AND userId = ?"
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(e.ID, userId)
 	return err
 }

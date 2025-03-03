@@ -13,7 +13,7 @@ type User struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func (u User) Save() error {
+func (u *User) Save() error {
 	query := "INSERT INTO user (email, password) VALUES (?, ?)"
 
 	stmt, err := db.DB.Prepare(query)
@@ -33,7 +33,9 @@ func (u User) Save() error {
 		return err
 	}
 
-	_, err = result.LastInsertId()
+	id, err := result.LastInsertId()
+	u.ID = id
+
 	return err
 }
 
